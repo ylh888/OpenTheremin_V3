@@ -64,6 +64,8 @@ class Application {
     void playCalibratingCountdownSound();
     void playModeSettingSound();
     void delay_NOP(unsigned long time);
+
+    void show();
 };
 
 #endif // _APPLICATION_H

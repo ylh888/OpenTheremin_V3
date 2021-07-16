@@ -153,7 +153,7 @@ void initialiseCVOut() {
 #endif
 
 AppMode Application::nextMode() {
-  return _mode == NORMAL ? MUTE : AppModeValues[_mode + 1];
+  return _mode == NORMAL ? MUTE : NORMAL; // AppModeValues[_mode + 1];
 }
 
 void Application::loop() {
@@ -198,18 +198,9 @@ void Application::loop() {
   }
 
   if (_state == CALIBRATING && HW_BUTTON_RELEASED) {
-    if (timerExpired(1500)) {
-     
-         _mode = nextMode();
- if (_mode==NORMAL) {HW_LED1_ON;HW_LED2_OFF;} else {HW_LED1_OFF;HW_LED2_ON;};
-   // playModeSettingSound();
-   
-   
-    }
-    _state = PLAYING;
-  };
 
-  if (_state == CALIBRATING && timerExpired(15000)) {
+
+  if (timerExpired(5000)) {
 
       HW_LED2_ON;
       
@@ -225,18 +216,25 @@ void Application::loop() {
   playCalibratingCountdownSound();
   calibrate();
   
-  
-      
-      
-
       _mode=NORMAL;
       HW_LED2_OFF;
       
     while (HW_BUTTON_PRESSED)
       ; // NOP
     _state = PLAYING;
-  };
+  } else
 
+    if (timerExpired(1500)) {
+     
+         _mode = nextMode();
+ if (_mode==NORMAL) {HW_LED1_ON;HW_LED2_OFF;} else {HW_LED1_OFF;HW_LED2_ON;};
+   // playModeSettingSound();
+   
+    _state = PLAYING;   
+    }
+
+  };
+  
 #if CV_ENABLED
   OCR0A = pitch & 0xff;
 #endif
@@ -244,8 +242,11 @@ void Application::loop() {
 #if SERIAL_ENABLED
   if (timerExpired(TICKS_100_MILLIS)) {
     resetTimer();
+    show();
+    /*
     Serial.write(pitch & 0xff);              // Send char on serial (if used)
     Serial.write((pitch >> 8) & 0xff);
+    */
   }
 #endif
 
@@ -525,4 +526,31 @@ void Application::delay_NOP(unsigned long time) {
   for (i = 0; i < time; i++) {
       __asm__ __volatile__ ("nop");
   }
+}
+
+void Application::show() {
+    Serial.println();
+    Serial.print("mode=");
+    if ( _mode == NORMAL )
+      Serial.print("Normal");
+    else
+      Serial.print("Mute");
+
+    Serial.print(", state=");
+    if ( _state == PLAYING )
+      Serial.print("Playing");
+    else
+      Serial.print("Calibrating");
+    Serial.print(", pitch=");
+    Serial.print(pitch);
+    Serial.print(", vol=");
+    Serial.print(vol);
+
+    Serial.print(" v=");  Serial.print(analogRead(VOLUME_POT));
+    Serial.print(" p="); Serial.print(analogRead(PITCH_POT));
+
+    Serial.print(" r="); Serial.print(analogRead(REGISTER_SELECT_POT));
+    Serial.print(" w="); Serial.print(analogRead(WAVE_SELECT_POT));
+    Serial.print(" ["); Serial.print(vWavetableSelector); Serial.print("]");
+    
 }

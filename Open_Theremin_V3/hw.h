@@ -1,8 +1,8 @@
 #ifndef _HW_H
 #define _HW_H
 
-#define PORTC5 0xff
-#define PORTC4 0x01
+//#define PORTC5 0xff
+//#define PORTC4 0x01
 
 #define HW_BUTTON_STATE    (PIND & (1<<PORTD6))
 #define HW_BUTTON_PRESSED  (HW_BUTTON_STATE == LOW)

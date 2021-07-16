@@ -33,6 +33,7 @@ class Application {
     static const int16_t REGISTER_SELECT_POT = 3;
 
     int vt_ext = 1; // whether to use external control
+    int vt_debug = 0;
     uint16_t vt_value = 0; // var to construct incoming values
     uint8_t vt_registerValue = 2;
     uint8_t vt_vWavetableSelector = 0;
@@ -71,7 +72,7 @@ class Application {
     void playModeSettingSound();
     void delay_NOP(unsigned long time);
 
-    void vt_loop();
+    void vt_loop(uint16_t);
     void vt_show();
 };
 

@@ -168,6 +168,8 @@ void Application::loop() {
   uint8_t registerValue = 2;
   uint16_t tmpVolume;
 
+  unsigned long time_s = 0;
+
 mloop:                   // Main loop avoiding the GCC "optimization"
 
   pitchPotValue    = analogRead(PITCH_POT);
@@ -201,12 +203,15 @@ mloop:                   // Main loop avoiding the GCC "optimization"
   if (_state == PLAYING && HW_BUTTON_PRESSED) {
     _state = CALIBRATING;
     resetTimer();
+    time_s = millis();
   }
 
   if (_state == CALIBRATING && HW_BUTTON_RELEASED) {
 
     // the sequence of the 'if/else' statements is important; longest checked first
-    if (timerExpired(5000)) {
+    unsigned long secs = (millis() - time_s) / 1000;
+
+    if (secs >= 5) {
 
       HW_LED2_ON;
 
@@ -227,11 +232,11 @@ mloop:                   // Main loop avoiding the GCC "optimization"
 
       while (HW_BUTTON_PRESSED)
         ; // NOP
-      //      _state = PLAYING;
 
-      //      vt_ext = 0;
+      _state = PLAYING;
+      vt_ext = 0;
 
-    } else if (timerExpired(2000)) { // long press of > 2sec and < 5 sec switches to/from Visual Tuner/ Serial Control _state
+    } else if (secs >= 2) { // long press of between 2sec and 5 sec switches to/from Visual Tuner/ Serial Control _state
 
       vt_ext = 1 - vt_ext;
       if (vt_ext) {
@@ -244,7 +249,7 @@ mloop:                   // Main loop avoiding the GCC "optimization"
       }
     } else { // one quick button press switches between Mute and Normal (sound)
 
-      _mode = _mode == MUTE ? NORMAL : MUTE; // nextMode();
+      _mode = (_mode == MUTE) ? NORMAL : MUTE; // nextMode();
       if (_mode == NORMAL) {
         HW_LED1_ON;
         HW_LED2_OFF;
@@ -264,7 +269,10 @@ mloop:                   // Main loop avoiding the GCC "optimization"
 #if SERIAL_ENABLED
   if (timerExpired(TICKS_100_MILLIS)) {
     resetTimer();
-    vt_loop();
+
+    uint16_t intended_freq = ((((pitchCalibrationBase - pitch_v) + 2048 - (pitchPotValue << 2))*1000)/1024) >> registerValue;
+    intended_freq = intended_freq > 5000 ? 0 : intended_freq;
+    vt_loop(intended_freq);
     /*
       Serial.write(pitch & 0xff);              // Send char on serial (if used)
       Serial.write((pitch >> 8) & 0xff);
@@ -550,14 +558,31 @@ void Application::delay_NOP(unsigned long time) {
   }
 }
 
-void Application::vt_loop() {
+/* ylh's visual tuner/controller
+ *  
+ *  interprets the following from the serial port
+ * "$Rn" = Register control where n = 1,2,3
+   "$Wn" = Wavetable control where n = 0 ... 7
+   "$d"  = toggle debug output between pitch only and verbose
+
+*/
+void Application::vt_loop(uint16_t f) {
+
+
+  if( vt_debug == 0 ) {
+    Serial.println(f);
+  } else {
+    Serial.print("\nplayed Hz:"); 
+    Serial.print(f);
+    vt_show();
+  }
+  
   while (Serial.available()) {
     int val = Serial.read();
 
     if (val == '$') {
       _vt_cmd = COMMAND;
       vt_value = 0;
-      return;
     }
 
     if ( _vt_cmd == COMMAND ) {
@@ -565,6 +590,8 @@ void Application::vt_loop() {
         _vt_cmd = REGISTER;
       } else if ( val == 'W' ) {
         _vt_cmd = WAVETABLE;
+      } else if (val == 'd' ) {
+        vt_debug = 1 - vt_debug;
       }
     }
     if ( val >= '0' && val <= '9') {
@@ -588,14 +615,12 @@ void Application::vt_loop() {
       }
     }
   }
-  
-  vt_show();
-  
+
 }
 
 void Application::vt_show() {
-  Serial.println();
-  Serial.print("mode=");
+
+  Serial.print(" mode=");
   if ( _mode == NORMAL )
     Serial.print("Normal");
   else
@@ -606,6 +631,9 @@ void Application::vt_show() {
     Serial.print("Playing");
   else
     Serial.print("Calibrating");
+
+  Serial.print(" BUTTON="); Serial.print(HW_BUTTON_PRESSED);
+  Serial.print(" timer="); Serial.print(timer);
   if ( vt_ext ) {
     Serial.print(" *EXT* " );
     Serial.print(" Reg= " ); Serial.print(vt_registerValue);

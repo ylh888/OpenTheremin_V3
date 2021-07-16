@@ -8,13 +8,15 @@
 enum AppState {CALIBRATING = 0, PLAYING};
 enum AppMode  {MUTE = 0, NORMAL};
 
+enum AppCmd { NONE, COMMAND, REGISTER, WAVETABLE };
+
 class Application {
   public:
     Application();
-    
+
     void setup();
     void loop();
-    
+
   private:
     static const uint16_t MAX_VOLUME = 4095;
     static const uint32_t TRIM_PITCH_FACTOR = 33554432;
@@ -23,29 +25,33 @@ class Application {
     static const int16_t BUTTON_PIN = 6;
     static const int16_t LED_PIN_1  = 18;
     static const int16_t LED_PIN_2  = 19;
-    
+
 
     static const int16_t PITCH_POT = 0;
     static const int16_t VOLUME_POT = 1;
     static const int16_t WAVE_SELECT_POT = 2;
     static const int16_t REGISTER_SELECT_POT = 3;
 
+    int vt_ext = 1; // whether to use external control
+    uint16_t vt_value = 0; // var to construct incoming values
+    uint8_t vt_registerValue = 2;
+    uint8_t vt_vWavetableSelector = 0;
 
-    
-#if SERIAL_ENABLED    
+#if SERIAL_ENABLED
     static const int BAUD = 115200;
 #endif
 
     AppState _state;
     AppMode  _mode;
-        
+    AppCmd   _vt_cmd;
+
     void calibrate();
     void calibrate_pitch();
     void calibrate_volume();
 
 
     AppMode nextMode();
-    
+
     void initialiseTimer();
     void initialiseInterrupts();
     void InitialisePitchMeasurement();
@@ -65,7 +71,8 @@ class Application {
     void playModeSettingSound();
     void delay_NOP(unsigned long time);
 
-    void show();
+    void vt_loop();
+    void vt_show();
 };
 
 #endif // _APPLICATION_H

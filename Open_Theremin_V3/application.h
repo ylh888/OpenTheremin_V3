@@ -8,7 +8,7 @@
 enum AppState {CALIBRATING = 0, PLAYING};
 enum AppMode  {MUTE = 0, NORMAL};
 
-enum AppCmd { NONE, COMMAND, REGISTER, WAVETABLE };
+enum AppCmd { NONE, COMMAND, REGISTER, WAVETABLE, SHOW };
 
 class Application {
   public:
@@ -32,8 +32,8 @@ class Application {
     static const int16_t WAVE_SELECT_POT = 2;
     static const int16_t REGISTER_SELECT_POT = 3;
 
-    int vt_ext = 1; // whether to use external control
-    int vt_debug = 0;
+    int vt_ext = 0; // whether to use external control
+    int vt_show = 1; // send to serial: 0 - none; 1 - frequency; 2 - details
     uint16_t vt_value = 0; // var to construct incoming values
     uint8_t vt_registerValue = 2;
     uint8_t vt_vWavetableSelector = 0;
@@ -73,7 +73,7 @@ class Application {
     void delay_NOP(unsigned long time);
 
     void vt_loop(uint16_t);
-    void vt_show();
+    void vt_show_debug();
 };
 
 #endif // _APPLICATION_H

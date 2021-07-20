@@ -262,23 +262,7 @@ mloop:                   // Main loop avoiding the GCC "optimization"
     _state = PLAYING;
   };
 
-#if CV_ENABLED
-  OCR0A = pitch & 0xff;
-#endif
 
-#if SERIAL_ENABLED
-  if (timerExpired(TICKS_100_MILLIS)) {
-    resetTimer();
-
-    uint16_t intended_freq = ((((pitchCalibrationBase - pitch_v) + 2048 - (pitchPotValue << 2))*1000)/1024) >> registerValue;
-    intended_freq = intended_freq > 5000 ? 0 : intended_freq;
-    vt_loop(intended_freq);
-    /*
-      Serial.write(pitch & 0xff);              // Send char on serial (if used)
-      Serial.write((pitch >> 8) & 0xff);
-    */
-  }
-#endif
 
   if (pitchValueAvailable) {                        // If capture event
 
@@ -325,6 +309,27 @@ mloop:                   // Main loop avoiding the GCC "optimization"
 
     volumeValueAvailable = false;
   }
+
+#if CV_ENABLED
+  OCR0A = pitch & 0xff;
+#endif
+
+#if SERIAL_ENABLED
+  if (timerExpired(TICKS_100_MILLIS)) {
+    resetTimer();
+
+    if ( vt_ext || vt_show > 0) {
+      uint16_t intended_freq = ((((pitchCalibrationBase - pitch_v) + 2048 - (pitchPotValue << 2)) * 1000) / 1024) >> registerValue;
+      intended_freq = intended_freq > 5000 ? 0 : intended_freq;
+      vt_loop(intended_freq);
+    }
+    /*
+      Serial.write(pitch & 0xff);              // Send char on serial (if used)
+      Serial.write((pitch >> 8) & 0xff);
+    */
+
+  }
+#endif
 
   goto mloop;                           // End of main loop
 }
@@ -559,9 +564,9 @@ void Application::delay_NOP(unsigned long time) {
 }
 
 /* ylh's visual tuner/controller
- *  
- *  interprets the following from the serial port
- * "$Rn" = Register control where n = 1,2,3
+
+    interprets the following from the serial port
+   "$Rn" = Register control where n = 1,2,3
    "$Wn" = Wavetable control where n = 0 ... 7
    "$d"  = toggle debug output between pitch only and verbose
 
@@ -569,14 +574,14 @@ void Application::delay_NOP(unsigned long time) {
 void Application::vt_loop(uint16_t f) {
 
 
-  if( vt_debug == 0 ) {
+  if ( vt_show == 1 ) {
     Serial.println(f);
-  } else {
-    Serial.print("\nplayed Hz:"); 
+  } else if (vt_show == 2) {
+    Serial.print("\nplayed Hz:");
     Serial.print(f);
-    vt_show();
-  }
-  
+    vt_show_debug();
+  } else {}
+
   while (Serial.available()) {
     int val = Serial.read();
 
@@ -585,16 +590,16 @@ void Application::vt_loop(uint16_t f) {
       vt_value = 0;
     }
 
-    if ( _vt_cmd == COMMAND ) {
+    else if ( _vt_cmd == COMMAND ) {
       if ( val == 'R' ) {
         _vt_cmd = REGISTER;
       } else if ( val == 'W' ) {
         _vt_cmd = WAVETABLE;
-      } else if (val == 'd' ) {
-        vt_debug = 1 - vt_debug;
+      } else if (val == 's' ) {
+        _vt_cmd = SHOW;
       }
     }
-    if ( val >= '0' && val <= '9') {
+    else if ( val >= '0' && val <= '9') {
       vt_value = vt_value * 10 + val - '0';
       if ( _vt_cmd == REGISTER ) {
         if (vt_value >= 1 && vt_value <= 3) {
@@ -604,7 +609,7 @@ void Application::vt_loop(uint16_t f) {
           Serial.print( vt_value );
         }
       }
-      if ( _vt_cmd == WAVETABLE ) {
+      else if ( _vt_cmd == WAVETABLE ) {
         if (vt_value >= 0 && vt_value <= 7) {
 
           vt_vWavetableSelector = vt_value;
@@ -613,12 +618,23 @@ void Application::vt_loop(uint16_t f) {
           Serial.print( val );
         }
       }
+      else if ( _vt_cmd == SHOW ) {
+        if (vt_value >= 0 && vt_value <= 2) {
+          vt_show = vt_value;
+        } else {
+          Serial.print( "illegal Show value " );
+          Serial.print( vt_value );
+        }
+      }
+      else {
+        Serial.print("illegal input value: ");
+        Serial.print(val);
+      }
     }
   }
-
 }
 
-void Application::vt_show() {
+void Application::vt_show_debug() {
 
   Serial.print(" mode=");
   if ( _mode == NORMAL )

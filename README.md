@@ -1,3 +1,33 @@
+## Open.Theremin V3.1 with Visual Tuner
+
+This version allows the Open Theremin to interact with a Visual Tuner, [a web based software](https://ylh888.github.io/art/visualtuner.html).
+
+The pitch information is displayed in the browser, which can also be used to select the wave table and register, bypassing the Theremin's knobs.
+
+1. Connect the Theremin by the USB cable to the computer.
+
+2. You need to use one of the following browsers: Chrome, Chromium, Edge or Opera. In addition, on these browsers you must enable experimental features. To do this copy one of:
+
+- chrome://flags/#enable-experimental-web-platform-features
+- edge://flags/#enable-experimental-web-platform-features
+- opera://flags/#enable-experimental-web-platform-features
+
+and paste it into your brower's address bar. Then, set the option to 'Enabled'.
+
+3. Now, in a browser window, run [the Visual Tuner](https://ylh888.github.io/art/visualtuner.html).
+
+Click anywhere on the canvas and select the port which connects to the Theremin. 
+
+The Theremin will begin to display the pitch information. There are three different presentation styles.
+
+4. On the Theremin, the button works as follows.
+
+- press and release quickly switches between Mute and Normal;
+- long press for 2 to 4 secs (then release)  will switch between local control (using the knobs) or through the browser;
+- long press for more than 4 secs (then release) will put the theremin into Calibration state. Following Calibration, the Theremin returns to Play state.
+
+This software is derived from:-
+
 ## Open.Theremin V3.1 control software
 
 Arduino UNO Software for the Open.Theremin

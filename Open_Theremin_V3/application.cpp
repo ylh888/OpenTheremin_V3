@@ -211,7 +211,7 @@ mloop:                   // Main loop avoiding the GCC "optimization"
     // the sequence of the 'if/else' statements is important; longest checked first
     unsigned long secs = (millis() - time_s) / 1000;
 
-    if (secs >= 5) {
+    if (secs >= 4) {
 
       HW_LED2_ON;
 
@@ -236,7 +236,7 @@ mloop:                   // Main loop avoiding the GCC "optimization"
       _state = PLAYING;
       vt_ext = 0;
 
-    } else if (secs >= 2) { // long press of between 2sec and 5 sec switches to/from Visual Tuner/ Serial Control _state
+    } else if (secs >= 2) { // long press of between 2sec and 4 sec switches to/from Visual Tuner/ Serial Control _state
 
       vt_ext = 1 - vt_ext;
       if (vt_ext) {
@@ -245,8 +245,8 @@ mloop:                   // Main loop avoiding the GCC "optimization"
         vt_value = 0;
         _vt_cmd = NONE;
       } else {
-
       }
+      
     } else { // one quick button press switches between Mute and Normal (sound)
 
       _mode = (_mode == MUTE) ? NORMAL : MUTE; // nextMode();
@@ -568,7 +568,7 @@ void Application::delay_NOP(unsigned long time) {
     interprets the following from the serial port
    "$Rn" = Register control where n = 1,2,3
    "$Wn" = Wavetable control where n = 0 ... 7
-   "$d"  = toggle debug output between pitch only and verbose
+   "$sn" = shows info on serial whern n=0: none; n=1: pitch; n=2: debug details
 
 */
 void Application::vt_loop(uint16_t f) {

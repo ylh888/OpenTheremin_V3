@@ -209,9 +209,9 @@ mloop:                   // Main loop avoiding the GCC "optimization"
   if (_state == CALIBRATING && HW_BUTTON_RELEASED) {
 
     // the sequence of the 'if/else' statements is important; longest checked first
-    unsigned long secs = (millis() - time_s) / 1000;
+    unsigned long milsecs = millis() - time_s;
 
-    if (secs >= 4) {
+    if (milsecs >= 4000) {
 
       HW_LED2_ON;
 
@@ -236,7 +236,7 @@ mloop:                   // Main loop avoiding the GCC "optimization"
       _state = PLAYING;
       vt_ext = 0;
 
-    } else if (secs >= 2) { // long press of between 2sec and 4 sec switches to/from Visual Tuner/ Serial Control _state
+    } else if (milsecs >= 2000) { // long press of between 2sec and 4 sec switches to/from Visual Tuner/ Serial Control _state
 
       vt_ext = 1 - vt_ext;
       if (vt_ext) {
